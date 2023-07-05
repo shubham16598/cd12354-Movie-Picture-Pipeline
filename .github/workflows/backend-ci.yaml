@@ -17,12 +17,12 @@ jobs:
       - name: Setup Python 3
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3
 
       - name: Install pipenv
         run: |
           python -m pip install --upgrade pip
-          pip install pipenv
+          sudo -H pip install -U pipenv
 
       - name: Install dependencies | Lint
         run: |
@@ -40,12 +40,12 @@ jobs:
       - name: Setup Python 3
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3
 
       - name: Install pipenv
         run: |
           python -m pip install --upgrade pip
-          pip install pipenv
+          sudo -H pip install -U pipenv
 
       - name: Install dependencies | Test
         run: |

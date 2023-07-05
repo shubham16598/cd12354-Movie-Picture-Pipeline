@@ -134,7 +134,7 @@ jobs:
   #         docker push $ECR_REGISTRY:latest
 
   deploy-to-cluster:
-    needs: push-to-ecr
+    #needs: push-to-ecr
     runs-on: ubuntu-latest
 
     steps:

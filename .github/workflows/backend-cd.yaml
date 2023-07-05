@@ -1,0 +1,161 @@
+name: Backend CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pip install flake8
+
+      - name: Install dependencies | Lint
+        run: |
+          cd starter/backend
+          pipenv install
+          pipenv run lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pip install flake8
+
+      - name: Install dependencies | Test
+        run: |
+          cd starter/backend
+          pipenv install
+          pipenv run lint
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pip install flake8
+
+      - name: Install dependencies
+        run: |
+          cd starter/backend
+          pipenv install
+
+      - name: Build Docker image
+        run: |
+          cd starter/backend
+          docker build --tag mp-backend:latest .
+
+  login-to-ecr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+  push-to-ecr:
+    needs: [login-to-ecr, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Push Docker image to ECR
+        working-directory: starter/backend
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        run: |
+          docker build --tag $ECR_REGISTRY:backend .
+          docker push $ECR_REGISTRY:backend
+
+  deploy-to-cluster:
+    needs: push-to-ecr
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+      - name: Login to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Deploy application using kubectl
+        working-directory: starter/backend/k8s
+        run: |
+          pwd
+          aws eks update-kubeconfig --name frontend-udacity
+          kustomize edit set image backend=$ECR_REGISTRY:backend
+          kustomize build | kubectl apply -f -

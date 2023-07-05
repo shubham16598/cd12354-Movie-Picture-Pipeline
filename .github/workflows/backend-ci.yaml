@@ -73,7 +73,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
           pip install flake8
-          
+
       - name: Install dependencies
         run: |
           cd starter/backend
@@ -82,5 +82,5 @@ jobs:
       - name: Build Docker image
         run: |
           cd starter/backend
-          pipenv install
           docker build --tag mp-backend:latest .
+          

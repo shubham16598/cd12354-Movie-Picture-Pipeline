@@ -101,9 +101,9 @@ jobs:
          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
 
      - name: Login to AWS ECR
-       run: |
-         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
-
+       id: login-ecr
+       uses: aws-actions/amazon-ecr-login@v1
+  
   push-to-ecr:
     needs: login-to-ecr
     runs-on: ubuntu-latest
@@ -130,6 +130,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
           aws-region: us-east-1
 
       - name: Deploy application using kubectl

@@ -22,7 +22,8 @@ jobs:
       - name: Install pipenv
         run: |
           python -m pip install --upgrade pip
-          sudo -H pip install -U pipenv
+          pip install pipenv
+          pip install flake8
 
       - name: Install dependencies | Lint
         run: |
@@ -45,7 +46,8 @@ jobs:
       - name: Install pipenv
         run: |
           python -m pip install --upgrade pip
-          sudo -H pip install -U pipenv
+          pip install pipenv
+          pip install flake8
 
       - name: Install dependencies | Test
         run: |
@@ -70,7 +72,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pipenv
-
+          pip install flake8
+          
       - name: Install dependencies
         run: |
           cd starter/backend

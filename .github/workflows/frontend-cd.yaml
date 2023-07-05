@@ -105,7 +105,7 @@ jobs:
        uses: aws-actions/amazon-ecr-login@v1
   
   push-to-ecr:
-    needs: login-to-ecr
+    needs: [login-to-ecr,build]
     runs-on: ubuntu-latest
 
     steps:
@@ -152,8 +152,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Deploy application using kubectl
+        working-directory: starter/frontend
         run: |
-          cd starter/backend/k8s
+          cd k8s
           aws eks update-kubeconfig --name frontend-udacity
           kustomize edit set image frontend=$ECR_REGISTRY:latest
           kustomize build | kubectl apply -f -

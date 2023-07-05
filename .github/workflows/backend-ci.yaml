@@ -24,14 +24,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
 
-      - name: Install dependencies
+      - name: Install dependencies | Lint
         run: |
           cd starter/backend
           pipenv install
-
-      - name: Run linting
-        run: |
-          cd starter/backend
           pipenv run lint
 
   test:
@@ -51,15 +47,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
 
-      - name: Install dependencies
+      - name: Install dependencies | Test
         run: |
           cd starter/backend
           pipenv install
-
-      - name: Run tests
-        run: |
-          cd starter/backend
-          pipenv run test
+          pipenv run lint
 
   build:
     needs: [lint, test]

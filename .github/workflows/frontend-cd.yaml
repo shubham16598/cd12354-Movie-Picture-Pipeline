@@ -85,7 +85,7 @@ jobs:
       - name: Build and run frontend container
         working-directory: starter/frontend
         run: |
-          docker build --build-arg=REACT_APP_MOVIE_API_URL=http://localhost:5000 --tag=frontend-udacity:latest .
+          docker build --build-arg=REACT_APP_MOVIE_API_URL=http://localhost:5000 --tag=mp-udacity:latest .
 
   login-to-ecr:
      runs-on: ubuntu-latest
@@ -130,8 +130,8 @@ jobs:
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         run: |
-          docker build --build-arg=REACT_APP_MOVIE_API_URL=http://localhost:5000 --tag $ECR_REGISTRY/frontend-udacity:latest .
-          docker push $ECR_REGISTRY/frontend-udacity:latest
+          docker build --build-arg=REACT_APP_MOVIE_API_URL=http://localhost:5000 --tag $ECR_REGISTRY:latest .
+          docker push $ECR_REGISTRY:latest
 
   deploy-to-cluster:
     needs: push-to-ecr
@@ -150,5 +150,5 @@ jobs:
         run: |
           cd starter/backend/k8s
           aws eks update-kubeconfig --name udacity-frontend
-          kustomize edit set image frontend=$ECR_REGISTRY/frontend-udacity:latest
+          kustomize edit set image frontend=$ECR_REGISTRY:latest
           kustomize build | kubectl apply -f -
